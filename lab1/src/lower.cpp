@@ -5,16 +5,14 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-
 int main (int argc, char** argv) {
     char ch;
+    (void)argc;
     int fd = std::atoi(argv[1]);
-    //std::cout << "fd_1_child = " << argv[1] << std::endl;
-    while(1) {
+    while(true) {
         read(fd, &ch, sizeof(ch));
         //std::cout << "ok" << std::endl;
+        ch = (char) tolower(ch);
         std::cout << ch << std::flush;
     }
-
-
 }

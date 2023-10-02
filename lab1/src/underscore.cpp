@@ -9,11 +9,12 @@
 int main (int argc, char** argv) {
     char ch;
     int fd = std::atoi(argv[1]);
-    std::cout << "fd_2_child = " << argv[1] << std::endl;
-    while(1) {
-        std:: cin >> ch;
+    (void)argc;
+    while(true) {
+        std::cin.get(ch);
+        if (ch == ' ') {
+            ch = '_';
+        }
         write(fd, &ch, sizeof(ch));
     }
-
-
 }
