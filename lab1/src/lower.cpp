@@ -11,8 +11,11 @@ int main (int argc, char** argv) {
     int fd = std::atoi(argv[1]);
     while(true) {
         read(fd, &ch, sizeof(ch));
-        //std::cout << "ok" << std::endl;
+        if(ch == '\0') {
+            break;
+        }
         ch = (char) tolower(ch);
         std::cout << ch << std::flush;
     }
+    std::cout << '\0';
 }

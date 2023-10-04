@@ -12,7 +12,9 @@ int main (int argc, char** argv) {
     (void)argc;
     while(true) {
         std::cin.get(ch);
-        if (ch == ' ') {
+        if (ch == '\0') {
+            break;
+        } else if (ch == ' ') {
             ch = '_';
         }
         write(fd, &ch, sizeof(ch));
