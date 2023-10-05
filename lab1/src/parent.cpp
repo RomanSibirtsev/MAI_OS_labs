@@ -1,9 +1,13 @@
 #include "parent.hpp"
 
-int parentWork() {
-    int status, fd1[2], fd2[2], connect[2], capacity;
+int ParentWork() {
     pid_t pid;
-    std::string s;
+    int status;
+    int capacity;
+    int fd1[2];
+    int fd2[2];
+    int connect[2];
+    std::string line;
 
     pipe(fd1);
     pipe(fd2);
@@ -31,21 +35,25 @@ int parentWork() {
     if (pid != 0) {
         close(fd1[0]);
         close(fd2[1]);
-        char ch, ch2, end = '\0';
-        while (std::getline(std::cin, s)) {
-            for (size_t i = 0; i < s.size(); ++i) {
-                ch = s[i];
-                write(fd1[1], &ch, sizeof(ch));
+        char chWrite;
+        char chOut;
+        char end = '\0';
+        while (std::getline(std::cin, line)) {
+            for (char i : line) {
+                chWrite = i;
+                write(fd1[1], &chWrite, sizeof(chWrite));
             }
-            ch = '\n';
-            write(fd1[1], &ch, sizeof(ch));
+            chWrite = '\n';
+            write(fd1[1], &chWrite, sizeof(chWrite));
 
-            capacity = s.size();
+            capacity = line.size();
             while(true) {
-                read(fd2[0], &ch2, sizeof(ch2));
+                read(fd2[0], &chOut, sizeof(chOut));
                 --capacity;
-                std::cout << ch2 << std::flush;
-                if (capacity == -1) break;
+                std::cout << chOut << std::flush;
+                if (capacity == -1) {
+                    break;
+                }
             }
         }
         write(fd1[1], &end, sizeof(end));

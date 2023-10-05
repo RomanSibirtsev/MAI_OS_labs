@@ -1,6 +1,6 @@
 #include "parent.hpp"
 
 int main() {
-    parentWork();
+    ParentWork();
     return 0;
 }
