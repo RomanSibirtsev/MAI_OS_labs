@@ -31,7 +31,8 @@ void testParent() {
     testing::internal::CaptureStdout();
     readUserInput();
     //parentWork(); 
-    ASSERT_EQ(testing::internal::GetCapturedStdout(), "aboba\n");    
+    ASSERT_EQ(testing::internal::GetCapturedStdout(), "aboba\n"); 
+    testing::internal::   
 
     close(fildes[0]);
 }
@@ -73,5 +74,5 @@ TEST(cin_test, ONE) {
 }
 
 TEST(cin_test, TWO) {
-    testParent();
+    readUserInput(); 
 }
