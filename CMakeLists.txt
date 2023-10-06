@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 
 project(OS_LABS C CXX)
 
+# set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
+
 enable_testing()
 
 if (MSVC)
@@ -11,5 +13,7 @@ else()
 endif()
 
 include(FindThreads)
+
+add_subdirectory(lab1)
 
 add_subdirectory(tests)
