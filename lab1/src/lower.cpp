@@ -6,6 +6,10 @@
 #include <fcntl.h>
 
 int main (int argc, char** argv) {
+    if (argc != 2) {
+        std::cerr << "Wrong argc in lower.out\n";
+        exit(-6);
+    }
     char chLow;
     (void)argc;
     int fd = std::atoi(argv[1]);

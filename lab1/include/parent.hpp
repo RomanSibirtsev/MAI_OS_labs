@@ -7,3 +7,6 @@
 #include <unistd.h>
 
 int ParentWork();
+void CreatePipe(int *fd);
+int CreateFork();
+void DoClose(int fd);

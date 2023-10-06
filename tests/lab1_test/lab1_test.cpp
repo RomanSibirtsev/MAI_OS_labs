@@ -3,37 +3,33 @@
 
 #include "parent.hpp"
 
-void TestParent(std::string &file1, std::string &file2) {
-    std::ifstream srcStream(file1);
-    std::ifstream resStream(file2);
-
-    std::string result;
-    std::getline(resStream, result);
+void TestParent(std::string &src, std::string &res) {
+    std::istringstream srcStream(src);
 
     std::streambuf* buf = std::cin.rdbuf(srcStream.rdbuf());
 
     testing::internal::CaptureStdout();
     ParentWork(); 
-    ASSERT_EQ(testing::internal::GetCapturedStdout(), result + '\n'); 
+    ASSERT_EQ(testing::internal::GetCapturedStdout(), res + '\n'); 
 
     std::cin.rdbuf(buf);
 }
 
 
 TEST(cin_test, ONE) {
-    std::string file1 = "test1_src.txt";
-    std::string file2 = "test1_res.txt";
-    TestParent(file1, file2);
+    std::string src = "       ";
+    std::string res = "_______";
+    TestParent(src, res);
 }
 
 TEST(cin_test, TWO) {
-    std::string file1 = "test2_src.txt";
-    std::string file2 = "test2_res.txt";
-    TestParent(file1, file2);
+    std::string src = "AHAHAHAHAH";
+    std::string res = "ahahahahah";
+    TestParent(src, res);
 }
 
 TEST(cin_test, THREE) {
-    std::string file1 = "test3_src.txt";
-    std::string file2 = "test3_res.txt";
-    TestParent(file1, file2);
+    std::string src = "   HELLO wOrLd 12 3";
+    std::string res = "___hello_world_12_3";
+    TestParent(src, res);
 }
