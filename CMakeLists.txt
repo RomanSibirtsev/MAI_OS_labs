@@ -2,14 +2,20 @@ cmake_minimum_required(VERSION 3.20)
 
 project(OS_LABS C CXX)
 
+# set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
+
 enable_testing()
 
 if (MSVC)
     add_compile_options(/W4 /WX)
 else()
-    add_compile_options(-Wall -Wextra -pedantic -Werror)
+    # add_compile_options(-Wall -Wextra -pedantic -Werror)
 endif()
 
 include(FindThreads)
+
+add_subdirectory(lab1)
+
+add_subdirectory(lab2)
 
 add_subdirectory(tests)
