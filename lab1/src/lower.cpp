@@ -11,7 +11,6 @@ int main (int argc, char** argv) {
         exit(-6);
     }
     char chLow;
-    (void)argc;
     int fd = std::atoi(argv[1]);
     while(true) {
         read(fd, &chLow, sizeof(chLow));

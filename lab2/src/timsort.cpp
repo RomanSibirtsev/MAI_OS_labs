@@ -1,10 +1,7 @@
 #include "timsort.hpp"
+#include <cmath>
 
 const int RUN = 4;
-
-// This function sorts array from left
-// index to to right index which is
-// of size atmost RUN
 
 struct Args1 {
     int* arr;
@@ -19,13 +16,19 @@ struct Args2 {
     int r;
 };
 
+void printArray(int arr[], int n)
+{
+    for (int i = 0; i < n; i++)
+        printf("%d  ", arr[i]);
+    printf("\n");
+}
+
 void* insertionSort(void* args)
 {
-    const auto &ar = *(reinterpret_cast<Args1 *>(args));
+    const auto &ar = *(Args1*)args;
     int *arr = ar.arr;
     int left = ar.left;
     int right = ar.right;
-
     for (int i = left + 1; i <= right; i++) {
         int temp = arr[i];
         int j = i - 1;
@@ -40,7 +43,6 @@ void* insertionSort(void* args)
     pthread_exit(0);
 }
 
-// Merge function merges the sorted runs
 void* merge(void* args)
 {
     Args2 arg = *(Args2*)args;
@@ -88,61 +90,63 @@ void* merge(void* args)
     pthread_exit(0);
 }
 
-void timSort(int *arr, int n)
+void timSort(int *arr, int n, int maxThreads)
 {
 
-    // Sort individual subarrays of size RUN
-    // for (int i = 0; i < n; i += RUN) {
-    //     //insertionSort(arr, i, min((i + RUN - 1), (n - 1)));
-    //     Args1 arg({arr, i,  min((i + RUN - 1), (n - 1))});
-    //     insertionSort((void*)(&arg));
-
-    // }
-    const int threadCount = n / RUN + 1;
+    int threadCount = std::min(n / RUN + 1, maxThreads);
+    if (maxThreads == -1) {
+        threadCount = n / RUN + 1;
+    }
     pthread_t tid[threadCount];
     int j = 0;
     for (int i = 0; i < n; i += RUN)
-    {
-        Args1 arg({arr, i,  std::min((i + RUN - 1), (n - 1))});
+    {        
+        Args1* arg = new Args1;
+        arg->arr = arr;
+        arg->left = i;
+        arg->right = std::min((i + RUN - 1), (n - 1));
         // insertionSort((void*)(&arg));
-        pthread_create(&tid[j++], nullptr, insertionSort, (void*)(&arg));
-    }
-    j = 0;
-    for (int i = 0; i < n; i += RUN)
-    {
-        pthread_join(tid[j++], NULL);
+        if (j < threadCount) {
+            pthread_create(&tid[j++], nullptr, insertionSort, (void*)(arg));
+        } else {
+            while (j > 0) {
+                pthread_join(tid[--j], NULL);
+            }
+            ++j;
+            pthread_create(&tid[j++], nullptr, insertionSort, (void*)(arg));
+        }
     }
 
-    std::vector<pthread_t> tid2;
+    while (j > 0) {
+        pthread_join(tid[--j], NULL);
+    }
+
+    std::vector<pthread_t> tid2(threadCount);
     j = 0;
     for (int size = RUN; size < n; size = 2 * size) {
         for (int left = 0; left < n; left += 2 * size) {
             int mid = left + size - 1;
             int right = std::min((left + 2 * size - 1), (n - 1));
             if (mid < right) {
-                // merge(arr, left, mid, right);
-                Args2 arg;
-                arg.arr = arr;
-                arg.l = left;
-                arg.m = mid;
-                arg.r = right;
+                Args2* arg = new Args2;
+                arg->arr = arr;
+                arg->l = left;
+                arg->m = mid;
+                arg->r = right;
                 // merge((void*)arg);
-                tid2.push_back(0);
-                pthread_create(&tid2[j++], nullptr, merge, (void*)(&arg));
+                if (j < threadCount) {
+                    pthread_create(&tid2[j++], nullptr, merge, (void*)(arg));
+                } else {
+                    while (j > 0) {
+                        pthread_join(tid2[--j], NULL);
+                    }
+                    pthread_create(&tid2[j++], nullptr, merge, (void*)(arg));
+                }
             }
         }
     }
-    j = 0;
-    for (int i = 0; i < tid2.size(); ++i)
-    {
-        pthread_join(tid2[j++], NULL);
-    }
-}
 
-// Utility function to print the Array
-void printArray(int arr[], int n)
-{
-    for (int i = 0; i < n; i++)
-        printf("%d  ", arr[i]);
-    printf("\n");
+    while (j > 0) {
+        pthread_join(tid2[--j], NULL);
+    }
 }
