@@ -1,12 +1,6 @@
 #pragma once
 
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <sys/wait.h>
-#include <unistd.h>
+
+#include "utils.hpp"
 
 int ParentWork();
-void CreatePipe(int *fd);
-int CreateFork();
-void DoClose(int fd);
