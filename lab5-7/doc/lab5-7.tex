@@ -63,7 +63,7 @@
 \end{center}
 \vspace{35ex}
 \begin{flushright}
-	\textit{Студент: } Былькова Кристина Алексеевна
+	\textit{Студент: } Сибирцев Роман Денисович
 	
 	\vspace{2ex}
 	\textit{Группа: } М8О-208Б-22
@@ -72,7 +72,7 @@
 	\textit{Преподаватель: } Миронов Евгений Сергеевич
 	
 	\vspace{2ex}
-	\textit{Вариант: } 43
+	\textit{Вариант: } 39
 	
 	\vspace{2ex}
 	\textit{Оценка: } \underline{\quad\quad\quad\quad\quad\quad}
@@ -100,7 +100,7 @@
 \endgroup
 
 \section{Репозиторий}
-\href{https://github.com/kr1st1na0/OS\_labs}{https://github.com/kr1st1na0/OS\_labs}
+\href{https://github.com/RomanSibirtsev/MAI_OS_labs}{https://github.com/RomanSibirtsev/MAI\_OS\_labs}
 
 \section{Цель работы}
 Приобретение практических навыков в:
@@ -118,10 +118,15 @@
 
 Все вычислительные узлы находятся в дереве общего вида. Есть только один управляющий узел. Чтобы добавить новый вычислительный узел к управляющему, то необходимо выполнить команду: create id -1.
 
-Набор команд 1:
-
-Подсчет суммы n чисел - формат команды: exec id n k\textsubscript{1} … k\textsubscript{n} id – целочисленный идентификатор вычислительного узла, на который отправляется команда n – количество складываемых чисел, k\textsubscript{1} … k\textsubscript{n} – складываемые числа.
-
+Набора команд 4 (поиск подстроки в строке)
+Формат команды:
+> exec id;
+> text\_string
+> pattern\_string
+[result] – номера позиций, где найден образец, разделенный точкой с запятой
+text\_string — текст, в котором искать образец. Алфавит: [A-Za-z0-9]. Максимальная длина строки
+108 символов
+pattern\_string — образец
 Команда проверки 2:
 
 Формат команды: ping id Команда проверяет доступность конкретного узла. Если узла нет, то необходимо выводить ошибку: «Error: Not found».
@@ -140,7 +145,7 @@
 \newpage
 
 \section{Исходный код}
-nodeRoutine.hpp
+node.hpp
 \begin{lstlisting}[language=C++]
 #pragma once
 
@@ -151,7 +156,7 @@ nodeRoutine.hpp
 #include <memory>
 #include "unistd.h"
 
-#include "socketRoutine.hpp"
+#include "socket.hpp"
 
 class Node{
 private:
@@ -177,7 +182,7 @@ public:
 };
 \end{lstlisting}
 
-socketRoutine.hpp
+socket.hpp
 \begin{lstlisting}[language=C++]
 #pragma once
 
@@ -198,9 +203,9 @@ bool SendMessage(zmq::socket_t *socket, const std::string& msg);
 std::optional<std::string> ReceiveMessage(zmq::socket_t *socket);
 \end{lstlisting}
 
-nodeRoutine.cpp
+node.cpp
 \begin{lstlisting}[language=C++]
-#include "nodeRoutine.hpp"
+#include "node.hpp"
 
 std::string Node::Ping(int _id) {
     std::string ans = "Ok: 0";
@@ -293,9 +298,9 @@ std::string Node::Kill() {
 }
 \end{lstlisting}
 
-socketRoutine.cpp
+socket.cpp
 \begin{lstlisting}[language=C++]
-#include "socketRoutine.hpp"
+#include "socket.hpp"
 
 int Bind(zmq::socket_t *socket, int id) {
     int port = 4040 + id;
@@ -344,82 +349,12 @@ std::optional<std::string> ReceiveMessage(zmq::socket_t *socket) {
 }
 \end{lstlisting}
 
-server.cpp
-\begin{lstlisting}[language=C++]
-#include "nodeRoutine.hpp"
-#include "socketRoutine.hpp"
-#include <fstream>
-#include <signal.h>
-
-int main(int argc, char **argv) {
-    if (argc != 3) {
-        perror("Not enough arguments");
-        exit(EXIT_FAILURE);
-    }
-    
-    Node task(atoi(argv[1]), atoi(argv[2]));
-    std::string programPath = getenv("PROGRAM_PATH");
-    while(1) {
-        std::string message;
-        std::string command = " ";
-        if (auto msg = ReceiveMessage(&(task.parent)); msg.has_value()) {
-            message = *msg;
-        }
-        std::istringstream request(message);
-        request >> command;
-
-        if (command == "create") {
-            int idChild;
-            request >> idChild;
-            std::string ans = task.Create(idChild, programPath);
-            SendMessage(&task.parent, ans);
-        } else if (command == "pid") {
-            std::string ans = task.Pid();
-            SendMessage(&task.parent, ans);
-        } else if (command == "ping") {
-            int idChild;
-            request >> idChild;
-            std::string ans = task.Ping(idChild);
-            SendMessage(&task.parent, ans);
-        } else if (command == "send") {
-            int id;
-            request >> id;
-            std::string str;
-            getline(request, str);
-            str.erase(0, 1);
-            std::string ans;
-            ans = task.Send(str, id);
-            SendMessage(&task.parent, ans);
-        } else if (command == "exec") {
-            int cnt, sum = 0, number;
-            request >> cnt;
-            for(int i = 0; i < cnt; i++) {
-                request >> number;
-                sum += number;
-            }
-            std::string to_send;
-            to_send = "Ok: " + std::to_string(task.id) + ": " + std::to_string(sum);
-            SendMessage(&task.parent,to_send);
-        } else if (command == "kill") {
-            std::string ans = task.Kill();
-            ans = std::to_string(task.id) + " " + ans;
-            SendMessage(&task.parent, ans);
-            Disconnect(&task.parent, task.parentPort);
-            task.parent.close();
-            break;
-        }
-    }
-
-    return 0;
-}
-\end{lstlisting}
-
-client.cpp
+control.cpp
 \begin{lstlisting}[language=C++]
 #include "set"
 
-#include "nodeRoutine.hpp"
-#include "socketRoutine.hpp"
+#include "node.hpp"
+#include "socket.hpp"
 
 int main() {
     std::set<int> Nodes;
@@ -507,6 +442,84 @@ int main() {
 }
 \end{lstlisting}
 
+calculate.cpp
+\begin{lstlisting}[language=C++]
+#include "node.hpp"
+#include "socket.hpp"
+#include <fstream>
+#include <signal.h>
+
+int main(int argc, char **argv) {
+    if (argc != 3) {
+        perror("Not enough arguments");
+        exit(EXIT_FAILURE);
+    }
+    
+    Node task(atoi(argv[1]), atoi(argv[2]));
+    std::string programPath = getenv("PROGRAM_PATH");
+    while(1) {
+        std::string message;
+        std::string command = " ";
+        if (auto msg = ReceiveMessage(&(task.parent)); msg.has_value()) {
+            message = *msg;
+        }
+        std::istringstream request(message);
+        request >> command;
+
+        if (command == "create") {
+            int idChild;
+            request >> idChild;
+            std::string ans = task.Create(idChild, programPath);
+            SendMessage(&task.parent, ans);
+        } else if (command == "pid") {
+            std::string ans = task.Pid();
+            SendMessage(&task.parent, ans);
+        } else if (command == "ping") {
+            int idChild;
+            request >> idChild;
+            std::string ans = task.Ping(idChild);
+            SendMessage(&task.parent, ans);
+        } else if (command == "send") {
+            int id;
+            request >> id;
+            std::string str;
+            getline(request, str);
+            str.erase(0, 1);
+            std::string ans;
+            ans = task.Send(str, id);
+            SendMessage(&task.parent, ans);
+        } else if (command == "exec") {
+            long unsigned int i, j;
+            std::string a, b, res = "";
+            request >> a >> b;
+            for (i = 0; i <= a.size() - b.size(); ++i) {
+                for (j = 0; j < b.size(); ++j) {
+                    if (a[i + j] != b[j]) {
+                        break;
+                    }
+                }
+                if (j == b.size()) {
+                    res += std::to_string(i) + ";";
+                }
+            }
+            if (res == "") res = "-1;";
+            std::string to_send;
+            to_send = "Ok: " + std::to_string(task.id) + ": " + res;
+            SendMessage(&task.parent,to_send);
+        } else if (command == "kill") {
+            std::string ans = task.Kill();
+            ans = std::to_string(task.id) + " " + ans;
+            SendMessage(&task.parent, ans);
+            Disconnect(&task.parent, task.parentPort);
+            task.parent.close();
+            break;
+        }
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
 \newpage
 \section{Тесты}
 \begin{lstlisting}[language=C++]
@@ -514,8 +527,8 @@ int main() {
 
 #include "set"
 
-#include "nodeRoutine.hpp"
-#include "socketRoutine.hpp"
+#include "node.hpp"
+#include "socket.hpp"
 
 TEST(FifthSeventhLabTests, PingTest) {
     std::string programPath = getenv("PROGRAM_PATH");
@@ -528,7 +541,7 @@ TEST(FifthSeventhLabTests, PingTest) {
     std::string ans = task.Send("ping 1", 1);
     EXPECT_EQ(ans, "Ok: 1");
 
-    ans = task.Send("ping 2", 2);
+    ans = task.Send("ping 3", 3);
     EXPECT_EQ(ans, "Error: Not found");
 
     task.Kill();
@@ -542,8 +555,8 @@ TEST(FifthSeventhLabTests, ExecTest) {
     task.Create(1, programPath);
     Nodes.insert(1);
 
-    std::string ans = task.Send("exec 5 6 4 2 8 5", 1);
-    EXPECT_EQ(ans, "Ok: 1: 25");
+    std::string ans = task.Send("exec asdfgh asd", 1);
+    EXPECT_EQ(ans, "Ok: 1: 0;");
 
     task.Kill();
 }
@@ -566,73 +579,40 @@ TEST(FifthSeventhLabTests, FullTest) {
     ans = task.Send("ping 2", 2);
     EXPECT_EQ(ans, "Ok: 1");
 
-    ans = task.Send("exec 3 1 2 3", 2);
-    EXPECT_EQ(ans, "Ok: 2: 6");
+    ans = task.Send("exec qwqwqwqwqw qw", 2);
+    EXPECT_EQ(ans, "Ok: 2: 0;2;4;6;8;");
 
-    ans = task.Send("exec 5 1 1 1 1 1", 3);
-    EXPECT_EQ(ans, "Ok: 3: 5");
+    ans = task.Send("exec qwerty ert", 3);
+    EXPECT_EQ(ans, "Ok: 3: 2;");
 
     task.Kill();
 }
 
-int main(int argc, char *argv[]) {
-    std::cout << getenv("PROGRAM_PATH") << std::endl;
-    // bash: export PROGRAM_PATH="/home/kristinab/ubuntu_main/OS_labs/build/lab5-7/server"
-    testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}
 \end{lstlisting}
 
 \newpage
-
-\section{Консоль}
-\begin{verbatim}
-kristinab@LAPTOP-SFU9B1F4:~/ubuntu_main/OS_labs/build/lab5-7$ ./client
-create 1 -1
-Ok: 28795
-create 2 -1
-Ok: 28801
-create 3 1
-Ok: 28807
-ping 1
-Ok: 1
-ping 2
-Ok: 1
-ping 3
-Ok: 1
-kill 3
-Ok
-ping 3
-Error: Not found
-exec 1 5 1 2 3 4 1
-Ok: 1: 11
-kill 2
-Ok
-exit
-\end{verbatim}
-
 \section{Запуск тестов}
 \begin{verbatim}
-kristinab@LAPTOP-SFU9B1F4:~/ubuntu_main/OS_labs/build/tests$ ./lab5-7_test
-/home/kristinab/ubuntu_main/OS_labs/build/lab5-7/server
+roman@DESKTOP-K3DH39N:~/MAI/MAI_OS_labs/build$ ./tests/lab5-7_test 
+Running main() from /home/roman/MAI/MAI_OS_labs/build/_deps/googletest-src/googletest/src/gtest_main.cc
 [==========] Running 3 tests from 1 test suite.
 [----------] Global test environment set-up.
 [----------] 3 tests from FifthSeventhLabTests
 [ RUN      ] FifthSeventhLabTests.PingTest
-[       OK ] FifthSeventhLabTests.PingTest (23 ms)
+[       OK ] FifthSeventhLabTests.PingTest (91 ms)
 [ RUN      ] FifthSeventhLabTests.ExecTest
 [       OK ] FifthSeventhLabTests.ExecTest (3 ms)
 [ RUN      ] FifthSeventhLabTests.FullTest
-[       OK ] FifthSeventhLabTests.FullTest (12 ms)
-[----------] 3 tests from FifthSeventhLabTests (39 ms total)
+[       OK ] FifthSeventhLabTests.FullTest (10 ms)
+[----------] 3 tests from FifthSeventhLabTests (105 ms total)
 
 [----------] Global test environment tear-down
-[==========] 3 tests from 1 test suite ran. (39 ms total)
+[==========] 3 tests from 1 test suite ran. (105 ms total)
 [  PASSED  ] 3 tests.
 \end{verbatim}
 \newpage
 
 \section{Выводы}
 
-В результате выполнения данной лабораторной работы была реализована распределенная система по асинхронной обработке запросов в соответствие с вариантом задания на С++. Я приобрела практические навыки в управлении серверами сообщений, применении отложенных вычислений и интеграции программных систем друг с другом.
+В результате выполнения данной лабораторной работы была реализована распределенная система по асинхронной обработке запросов в соответствие с вариантом задания на С++. Я приобрел практические навыки в управлении серверами сообщений, применении отложенных вычислений и интеграции программных систем друг с другом.
 \end{document}
