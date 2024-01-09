@@ -60,8 +60,11 @@
 \vspace{40ex}
 \begin{center}
 	\textbf{\large{Курсовой проект по курсу \linebreak \textquotedblleft Операционные системы\textquotedblright}}
+
+    \vspace{1ex}    
+    \textbf{\large{Тема работы \linebreak \textquotedblleft Аллокаторы памяти \textquotedblright}}
 \end{center}
-\vspace{35ex}
+\vspace{29ex}
 \begin{flushright}
 	\textit{Студент: } Сибирцев Роман Денисович
 	
@@ -123,7 +126,7 @@
 
     > void* free(Allocator * allocator, void * block) - возвращает выделенную память аллокатору
 
-% список свободных блоков (наиболее подходящее) и алгоритм Мак-Кьюзика-Кэрелса
+
 Алгоритм Мак-Кьюзика-Кэрелса:
 
     Алгоритм подразумевает, что память разбита на набор последовательных страниц, и все буферы, относящиеся к одной странице, должны иметь одинаковый размер (являющийся некоторой степенью числа 2).
@@ -444,9 +447,6 @@ main.cpp
         start_time = std::chrono::steady_clock::now();
         for (size_t i = 0; i != list_blocks.size(); ++i) {
             list_alloc.free(list_blocks[i]);
-            if (i < 20) {
-                std::cout << list_blocks[i] << std::endl;
-            }
         }
         end_time = std::chrono::steady_clock::now();
         std::cout << "Time of free FBLAllocator: " << 
@@ -456,67 +456,196 @@ main.cpp
         start_time = std::chrono::steady_clock::now();
         for (size_t i = 0; i != MKC_blocks.size(); ++i) {
             MKC_alloc.free(MKC_blocks[i]);
-            if (i < 20) {
-                std::cout << MKC_blocks[i] << std::endl;
-            }
         }
         end_time = std::chrono::steady_clock::now();
+    
         std::cout << "Time of free MCKAllocator: " << 
                       std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << 
                       " milliseconds" << std::endl;
+    
+    
+    //--------
+    
+        std::vector<void*> list_blocks2;
+        std::vector<void*> MKC_blocks2;
+    
+        list_memory = sbrk(10000 * page_size * 100); 
+        MKC_memory = sbrk(10000 * page_size * 100);
+    
+        FBLAllocator list_alloc2(list_memory, 10000 * page_size);
+        MCKAllocator MKC_alloc2(MKC_memory, 1000 * page_size);
+        std::cout << "Block allocation rate of 1000 bytes" << std::endl;
+        start_time = std::chrono::steady_clock::now();
+        for (size_t i = 0; i != 100000; ++i) {
+            void* block = list_alloc2.alloc(1000);
+            list_blocks2.push_back(block);
+        }
+        end_time = std::chrono::steady_clock::now();
+        std::cout << "Time of alloc FBLAllocator: " << 
+                      std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << 
+                      " milliseconds" << std::endl;
+    
+        start_time = std::chrono::steady_clock::now();
+        for (size_t i = 0; i != 100000; ++i) {
+            void* block = MKC_alloc2.alloc(1000);
+            MKC_blocks2.push_back(block);
+        }
+        end_time = std::chrono::steady_clock::now();
+        std::cout << "Time of alloc MCKAllocator: " << 
+                      std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << 
+                      " milliseconds" << std::endl;
+    
+        std::cout << "Block free rate" << std::endl;
+        start_time = std::chrono::steady_clock::now();
+        for (size_t i = 0; i != list_blocks.size(); ++i) {
+            list_alloc2.free(list_blocks2[i]);
+        }
+        end_time = std::chrono::steady_clock::now();
+        std::cout << "Time of free FBLAllocator: " << 
+                      std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << 
+                      " milliseconds" << std::endl;
+    
+        start_time = std::chrono::steady_clock::now();
+        for (size_t i = 0; i != MKC_blocks.size(); ++i) {
+            MKC_alloc2.free(MKC_blocks2[i]);
+        }
+        end_time = std::chrono::steady_clock::now();
+    
+        std::cout << "Time of free MCKAllocator: " << 
+                      std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << 
+                      " milliseconds" << std::endl;
+    
+    //----------------------------
+    
+        std::vector<void*> list_blocks3;
+        std::vector<void*> MKC_blocks3;
+    
+        list_memory = sbrk(10000 * page_size * 100); 
+        MKC_memory = sbrk(10000 * page_size * 100);
+    
+        FBLAllocator list_alloc3(list_memory, 10000 * page_size);
+        MCKAllocator MKC_alloc3(MKC_memory, 1000 * page_size);
+        std::cout << "Block allocation rate of 3000 bytes" << std::endl;
+        start_time = std::chrono::steady_clock::now();
+        for (size_t i = 0; i != 100000; ++i) {
+            void* block = list_alloc3.alloc(3000);
+            list_blocks3.push_back(block);
+        }
+        end_time = std::chrono::steady_clock::now();
+        std::cout << "Time of alloc FBLAllocator: " << 
+                      std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << 
+                      " milliseconds" << std::endl;
+    
+        start_time = std::chrono::steady_clock::now();
+        for (size_t i = 0; i != 100000; ++i) {
+            void* block = MKC_alloc3.alloc(3000);
+            MKC_blocks3.push_back(block);
+        }
+        end_time = std::chrono::steady_clock::now();
+        std::cout << "Time of alloc MCKAllocator: " << 
+                      std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << 
+                      " milliseconds" << std::endl;
+    
+        std::cout << "Block free rate" << std::endl;
+        start_time = std::chrono::steady_clock::now();
+        for (size_t i = 0; i != list_blocks.size(); ++i) {
+            list_alloc3.free(list_blocks3[i]);
+        }
+        end_time = std::chrono::steady_clock::now();
+        std::cout << "Time of free FBLAllocator: " << 
+                      std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << 
+                      " milliseconds" << std::endl;
+    
+        start_time = std::chrono::steady_clock::now();
+        for (size_t i = 0; i != MKC_blocks.size(); ++i) {
+            MKC_alloc3.free(MKC_blocks3[i]);
+        }
+        end_time = std::chrono::steady_clock::now();
+    
+        std::cout << "Time of free MCKAllocator: " << 
+                      std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << 
+                      " milliseconds" << std::endl;
+    //-----------------------------------------------------
+        std::vector<void*> list_blocks4;
+        std::vector<void*> MKC_blocks4;
+    
+        list_memory = sbrk(10000 * page_size * 100); 
+        MKC_memory = sbrk(10000 * page_size * 100);
+    
+        FBLAllocator list_alloc4(list_memory, 10000 * page_size);
+        MCKAllocator MKC_alloc4(MKC_memory, 10000 * page_size);
+        std::cout << "Block allocation rate of 1000 bytes" << std::endl;
+        start_time = std::chrono::steady_clock::now();
+        for (size_t i = 0; i != 10000000; ++i) {
+            void* block = list_alloc4.alloc(200);
+            list_blocks4.push_back(block);
+        }
+        end_time = std::chrono::steady_clock::now();
+        std::cout << "Time of alloc FBLAllocator: " << 
+                      std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << 
+                      " milliseconds" << std::endl;
+    
+        start_time = std::chrono::steady_clock::now();
+        for (size_t i = 0; i != 10000000; ++i) {
+            void* block = MKC_alloc4.alloc(200);
+            MKC_blocks4.push_back(block);
+        }
+        end_time = std::chrono::steady_clock::now();
+        std::cout << "Time of alloc MCKAllocator: " << 
+                      std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << 
+                      " milliseconds" << std::endl;
+    
+        std::cout << "Block free rate" << std::endl;
+        start_time = std::chrono::steady_clock::now();
+        for (size_t i = 0; i != list_blocks.size(); ++i) {
+            list_alloc4.free(list_blocks4[i]);
+        }
+        end_time = std::chrono::steady_clock::now();
+        std::cout << "Time of free FBLAllocator: " << 
+                      std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << 
+                      " milliseconds" << std::endl;
+    
+        start_time = std::chrono::steady_clock::now();
+        for (size_t i = 0; i != MKC_blocks.size(); ++i) {
+            MKC_alloc4.free(MKC_blocks4[i]);
+        }
+        end_time = std::chrono::steady_clock::now();
+    
+        std::cout << "Time of free MCKAllocator: " << 
+                      std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << 
+                      " milliseconds" << std::endl;
+    
     }
 \end{lstlisting}
 
 \newpage
 \section{Консоль}
 \begin{lstlisting}[language=C++]
-    Comparing ListAllocator and MacKuseyCarelsAllocator
+    Comparing FBLAllocator and MCKAllocator
     Block allocation rate
-    Time of alloc ListAllocator: 13 milliseconds
-    Time of alloc MacKuseyCarelsAllocator: 197 milliseconds
+    Time of alloc FBLAllocator: 6 milliseconds
+    Time of alloc MCKAllocator: 28 milliseconds
     Block free rate
-    0x55ea9037c020
-    0x55ea9037c094
-    0x55ea9037c109
-    0x55ea9037c17f
-    0x55ea9037c1f6
-    0x55ea9037c26e
-    0x55ea9037c2e7
-    0x55ea9037c361
-    0x55ea9037c3dc
-    0x55ea9037c458
-    0x55ea9037c4d5
-    0x55ea9037c553
-    0x55ea9037c5d2
-    0x55ea9037c652
-    0x55ea9037c6d3
-    0x55ea9037c755
-    0x55ea9037c7d8
-    0x55ea9037c85c
-    0x55ea9037c8e1
-    0x55ea9037c967
-    Time of free ListAllocator: 2 milliseconds
-    0x7fe0386a1000
-    0x7fe038667000
-    0x7fe038666000
-    0x7fe038665000
-    0x7fe038664000
-    0x7fe038663000
-    0x7fe038662000
-    0x7fe038661000
-    0x7fe038660000
-    0x7fe03865f000
-    0x7fe03865e000
-    0x7fe0380fe000
-    0x7fe0380fd000
-    0x7fe0380fc000
-    0x7fe0380fb000
-    0x7fe0380fa000
-    0x7fe0380f9000
-    0x7fe0380f8000
-    0x7fe0380f7000
-    0x7fe0380f6000
-    Time of free MacKuseyCarelsAllocator: 2 milliseconds
+    Time of free FBLAllocator: 0 milliseconds
+    Time of free MCKAllocator: 1 milliseconds
+    Block allocation rate of 1000 bytes
+    Time of alloc FBLAllocator: 8 milliseconds
+    Time of alloc MCKAllocator: 34 milliseconds
+    Block free rate
+    Time of free FBLAllocator: 0 milliseconds
+    Time of free MCKAllocator: 0 milliseconds
+    Block allocation rate of 3000 bytes
+    Time of alloc FBLAllocator: 8 milliseconds
+    Time of alloc MCKAllocator: 34 milliseconds
+    Block free rate
+    Time of free FBLAllocator: 0 milliseconds
+    Time of free MCKAllocator: 0 milliseconds
+    Block allocation rate of 1000 bytes
+    Time of alloc FBLAllocator: 171 milliseconds
+    Time of alloc MCKAllocator: 186 milliseconds
+    Block free rate
+    Time of free FBLAllocator: 1 milliseconds
+    Time of free MCKAllocator: 1 milliseconds
 \end{lstlisting}
 
 \newpage
@@ -527,22 +656,9 @@ main.cpp
 список свободных блоков (наиболее подходящее) и алгоритм Мак-Кьюзика-Кэрелса.
 
 Сравнивая эти два способа аллокации памяти, основываясь на времени их работы и 
-на самом принципе работы можно сделать следующие выводы касательно каждого аллокатора:
-
-Список свободных блоков:
-
- - простой алгоритм
-
- - можно выделять ровно запрошенное количество байт
-
- - большая фрагментация при длительной работе
-
-Алгоритм Мак-Кьюзика-Кэрелса:
-
- - блоки можно выделять нужного размера
-
- - блоки формируются по требованиям системы
-
- - возможны потери при неравномерном распределении запрашиваемых размеров памяти
+на самом принципе работы можно сделать вывод, что метод свободных блоков работает быстрее, чем 
+алгоритм Мак-Кьюзи-Кэрелса, но с ростом количества выделяемых блоков разница в работе алгоритмов становится меньше.
+Также при выделении блоков разного размера методом свободных блоков эти блоки будут хаотично разбросаны по памяти, 
+при работе же алгоритма Мак-Кьюзи-Кэрелса, блоки с одинаковым размером будут расположены друг за другом в области памяти.
 
 \end{document}
